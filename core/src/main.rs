@@ -24,9 +24,8 @@ fn main()
     {
         let options: LINOptions = Default::default();
         let mut master = LINMaster::new(options);
-        let handlers = load_handlers();
 
-        load_frames(&mut master, &handlers);
+        load_frames(&mut master);
 
         master.start();
     });
@@ -38,21 +37,7 @@ fn main()
     println!("LIN OUTPUT: {:?}", lin_thread_output);
 }
 
-fn load_handlers<T: frame::LINFrameHandler>() -> Vec<T>
+fn load_frames(master: &mut LINMaster)
 {
-    let handlers = vec!
-    [
-        Zero::new()
-    ];
-
-    handlers
-}
-
-fn load_frames<T: frame::LINFrameHandler>(master: &mut LINMaster, handlers: &Vec<T>)
-{
-    for handler in handlers
-    {
-        let frame = LINFrame::new(0, frame::Type::Unconditional, true, vec![], &handler);
-        master.add_frame(frame);
-    }
+    master.add_frame(LINFrame::new(0, frame::Type::Unconditional, true, vec![], Box::new(Zero::new())));
 }

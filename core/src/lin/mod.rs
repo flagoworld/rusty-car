@@ -40,7 +40,7 @@ impl Default for LINOptions
     }
 }
 
-pub struct LINMaster<'a>
+pub struct LINMaster
 {
     options: LINOptions,
     byte_time: f32,
@@ -51,16 +51,16 @@ pub struct LINMaster<'a>
     last_frame_data: Vec<u8>,
 
     current_frame: usize,
-    last_frame: Option<LINFrame<'a>>,
+    last_frame: Option<LINFrame>,
 
-    schedule: Vec<LINFrame<'a>>,
-    schedule_event_collision: Vec<LINFrame<'a>>,
-    schedule_sporadic: Vec<LINFrame<'a>>
+    schedule: Vec<LINFrame>,
+    schedule_event_collision: Vec<LINFrame>,
+    schedule_sporadic: Vec<LINFrame>
 }
 
-impl<'a> Default for LINMaster<'a>
+impl Default for LINMaster
 {
-    fn default() -> LINMaster<'a>
+    fn default() -> LINMaster
     {
         LINMaster
         {
@@ -82,9 +82,9 @@ impl<'a> Default for LINMaster<'a>
     }
 }
 
-impl<'a> LINMaster<'a>
+impl LINMaster
 {
-    pub fn new(options: LINOptions) -> LINMaster<'a>
+    pub fn new(options: LINOptions) -> LINMaster
     {
         let mut master: LINMaster = Default::default();
 
@@ -100,7 +100,7 @@ impl<'a> LINMaster<'a>
         return master;
     }
 
-    pub fn add_frame(&mut self, frame: LINFrame<'a>)
+    pub fn add_frame(&mut self, frame: LINFrame)
     {
         self.schedule.push(frame);
     }
@@ -127,7 +127,10 @@ impl<'a> LINMaster<'a>
 
         loop
         {
-            self.next_frame();
+            match rx.recv()
+            {
+                _ => self.next_frame()
+            }
         }
 
         worker.join();

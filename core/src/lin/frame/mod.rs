@@ -14,18 +14,18 @@ pub enum ID
     Reserved = 0x3f
 }
 
-pub struct LINFrame<'a>
+pub struct LINFrame
 {
     pub id: u8,
     pub frame_type: Type,
     pub request_frame: bool,
     pub collision_frames: Vec<u8>,
-    pub handler: &'a LINFrameHandler
+    pub handler: Box<LINFrameHandler>
 }
 
-impl<'a> LINFrame<'a>
+impl LINFrame
 {
-    pub fn new<T: LINFrameHandler>(id: u8, frame_type: Type, request_frame: bool, collision_frames: Vec<u8>, handler: &'a T) -> LINFrame<'a>
+    pub fn new(id: u8, frame_type: Type, request_frame: bool, collision_frames: Vec<u8>, handler: Box<LINFrameHandler>) -> LINFrame
     {
         LINFrame { id: id, frame_type: frame_type, request_frame: true, collision_frames: collision_frames, handler: handler }
     }

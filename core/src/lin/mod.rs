@@ -12,7 +12,7 @@ use self::frame::LINFrame;
 use std::sync::mpsc::channel;
 use std::thread;
 
-mod frame;
+pub mod frame;
 
 const MSEC_SEC: f32 = 1000f32;
 
@@ -40,7 +40,7 @@ impl Default for LINOptions
     }
 }
 
-pub struct LINMaster
+pub struct LINMaster<'a>
 {
     options: LINOptions,
     byte_time: f32,
@@ -51,16 +51,16 @@ pub struct LINMaster
     last_frame_data: Vec<u8>,
 
     current_frame: usize,
-    last_frame: Option<LINFrame>,
+    last_frame: Option<LINFrame<'a>>,
 
-    schedule: Vec<LINFrame>,
-    schedule_event_collision: Vec<LINFrame>,
-    schedule_sporadic: Vec<LINFrame>
+    schedule: Vec<LINFrame<'a>>,
+    schedule_event_collision: Vec<LINFrame<'a>>,
+    schedule_sporadic: Vec<LINFrame<'a>>
 }
 
-impl Default for LINMaster
+impl<'a> Default for LINMaster<'a>
 {
-    fn default() -> LINMaster
+    fn default() -> LINMaster<'a>
     {
         LINMaster
         {
@@ -82,9 +82,9 @@ impl Default for LINMaster
     }
 }
 
-impl LINMaster
+impl<'a> LINMaster<'a>
 {
-    pub fn new(options: LINOptions) -> LINMaster
+    pub fn new(options: LINOptions) -> LINMaster<'a>
     {
         let mut master: LINMaster = Default::default();
 
@@ -100,7 +100,7 @@ impl LINMaster
         return master;
     }
 
-    pub fn addFrame(&mut self, frame: LINFrame)
+    pub fn add_frame(&mut self, frame: LINFrame<'a>)
     {
         self.schedule.push(frame);
     }
@@ -140,7 +140,7 @@ impl LINMaster
             return;
         }
 
-        let frame = self.schedule[self.current_frame];
+        let frame = &self.schedule[self.current_frame];
 
         self.current_frame += 1;
 
@@ -160,6 +160,8 @@ impl LINMaster
         })();
 
         let buf: Vec<u8> = vec![];
+
+        println!("VEC: {:?}", buf);
     }
 }
 

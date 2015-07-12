@@ -14,24 +14,24 @@ pub enum ID
     Reserved = 0x3f
 }
 
-pub struct LINFrame
+pub struct LINFrame<'a>
 {
-    id: u8,
-    frame_type: Type,
-    request_frame: bool,
-    collision_frames: Vec<u8>,
-    handler: Box<LINFrameHandler>
+    pub id: u8,
+    pub frame_type: Type,
+    pub request_frame: bool,
+    pub collision_frames: Vec<u8>,
+    pub handler: &'a LINFrameHandler
 }
 
-impl LINFrame
+impl<'a> LINFrame<'a>
 {
-    fn new<T: LINFrameHandler>(id: u8, frame_type: Type, request_frame: bool, collision_frames: Vec<u8>, handler: T) -> LINFrame
+    pub fn new<T: LINFrameHandler>(id: u8, frame_type: Type, request_frame: bool, collision_frames: Vec<u8>, handler: &'a T) -> LINFrame<'a>
     {
-        LINFrame { id: id, frame_type: frame_type, request_frame: true, collision_frames: collision_frames, handler: Box::new(handler) }
+        LINFrame { id: id, frame_type: frame_type, request_frame: true, collision_frames: collision_frames, handler: handler }
     }
 }
 
-trait LINFrameHandler
+pub trait LINFrameHandler
 {
     // Array of up to 8 bytes
     fn response_data(&self) -> Vec<u8>;

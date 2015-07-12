@@ -152,7 +152,7 @@ impl LINMaster
         let sync_byte: u8 = 0x55;
         let protected_identifier = (||
         {
-            let mut byte = frame.id();
+            let mut byte = frame.id;
             byte += (((byte >> 0) & 0x01) ^ ((byte >> 1) & 0x01) ^ ((byte >> 2) & 0x01) ^ ((byte >> 4) & 0x01)) as u8;
             byte += 1u8 - (((byte >> 1) & 0x01) ^ ((byte >> 3) & 0x01) ^ ((byte >> 4) & 0x01) ^ ((byte >> 5) & 0x01)) as u8;
 

@@ -1,7 +1,7 @@
-use std::cell::RefCell;
 use std::thread;
 use lin::LINOptions;
 use lin::LINMaster;
+use lin::frame::LINFrame as LINFrame;
 
 mod lin;
 mod rest;
@@ -10,13 +10,11 @@ fn main()
 {
     let rest_thread = thread::Builder::new().name("rusty-car-rest".to_string()).spawn(move ||
     {
-        for x in 1..10
+        loop
         {
             println!("REST");
-            thread::sleep_ms(1000);
+            thread::sleep_ms(5000);
         }
-
-        println!("GUI DONE!");
     });
 
     let lin_thread = thread::Builder::new().name("rusty-car-lin".to_string()).spawn(move ||

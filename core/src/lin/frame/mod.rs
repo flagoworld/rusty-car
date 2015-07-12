@@ -1,12 +1,17 @@
 pub struct LINFrame
 {
-    frame_type: String
+    id: u8
 }
 
 impl LINFrame
 {
     fn new() -> LINFrame
     {
-        LINFrame { frame_type: "LINFrame".to_string() }
+        LINFrame { id: 0u8 }
+    }
+
+    pub fn id(&self) -> u8
+    {
+        return self.id;
     }
 }

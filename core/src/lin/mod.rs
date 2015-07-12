@@ -11,6 +11,7 @@ use self::serial::prelude::*;
 use self::frame::LINFrame;
 use std::sync::mpsc::channel;
 use std::thread;
+use std::sync::Arc;
 
 pub mod frame;
 
@@ -40,7 +41,7 @@ impl Default for LINOptions
     }
 }
 
-pub struct LINMaster
+pub struct LINMaster<'a>
 {
     options: LINOptions,
     byte_time: f32,
@@ -48,19 +49,20 @@ pub struct LINMaster
     frame_bytes: f32,
     frame_time: f32,
     serial: Option<serial::posix::TTYPort>,
-    last_frame_data: Vec<u8>,
+    last_frame_data: Arc<Vec<u8>>,
 
     current_frame: usize,
-    last_frame: Option<LINFrame>,
+    current_collision_frame: usize,
+    last_frame: Option<&'a LINFrame>,
 
     schedule: Vec<LINFrame>,
     schedule_event_collision: Vec<LINFrame>,
     schedule_sporadic: Vec<LINFrame>
 }
 
-impl Default for LINMaster
+impl<'a> Default for LINMaster<'a>
 {
-    fn default() -> LINMaster
+    fn default() -> LINMaster<'a>
     {
         LINMaster
         {
@@ -70,9 +72,10 @@ impl Default for LINMaster
             frame_bytes: 0f32,
             frame_time: 0f32,
             serial: None,
-            last_frame_data: vec![],
+            last_frame_data: Arc::new(vec![]),
 
             current_frame: 0,
+            current_collision_frame: 0,
             last_frame: None,
 
             schedule: vec![],
@@ -82,9 +85,9 @@ impl Default for LINMaster
     }
 }
 
-impl LINMaster
+impl<'a> LINMaster<'a>
 {
-    pub fn new(options: LINOptions) -> LINMaster
+    pub fn new(options: LINOptions) -> LINMaster<'a>
     {
         let mut master: LINMaster = Default::default();
 
@@ -129,29 +132,88 @@ impl LINMaster
         {
             match rx.recv()
             {
-                _ => self.next_frame()
+                _ => self.begin_frame()
             }
         }
 
         worker.join();
     }
 
-    fn next_frame(&mut self)
+    fn begin_frame(&mut self)
     {
         if self.schedule.len() == 0
         {
             return;
         }
 
-        let frame = &self.schedule[self.current_frame];
+        let frame = self.last_frame;
+        let data = &self.last_frame_data;
+
+        self.last_frame_data = Arc::new(vec![]);
+
+        if !frame.is_none()
+        {
+            let frame = frame.unwrap();
+
+            if frame.request_frame
+            {
+                if match frame.frame_type { frame::Type::EventTriggered => true, _ => false }
+                {
+                    if self.detect_frame_collision(&data)
+                    {
+                        let collision_frame_ids = &frame.collision_frames;
+                        let mut collision_frames: Vec<LINFrame> = vec![];
+
+                        for id in collision_frame_ids
+                        {
+                            collision_frames.push(LINFrame::new(*id, frame.frame_type, frame.request_frame, vec![], frame.handler.boxed_new()));
+                        }
+
+                        self.schedule_event_collision = collision_frames;
+                    }else
+                    {
+                        frame.handler.handle_response(data);
+                    }
+                }else
+                {
+                    frame.handler.handle_response(data);
+                }
+            }
+        }
+
+        self.process_frame(self.next_frame());
+    }
+
+    fn next_frame(&mut self) -> &LINFrame
+    {
+        if self.schedule_event_collision.len() > 0
+        {
+            if self.current_collision_frame < self.schedule_event_collision.len()
+            {
+                self.last_frame = self.schedule_event_collision.get(self.current_collision_frame);
+                self.current_collision_frame += 1;
+                return self.last_frame.unwrap();
+            }else
+            {
+                self.schedule_event_collision = vec![];
+                self.current_collision_frame = 0;
+            }
+        }
+
+        self.last_frame = self.schedule.get(self.current_frame);
 
         self.current_frame += 1;
 
-        if(self.current_frame >= self.schedule.len())
+        if self.current_frame >= self.schedule.len()
         {
             self.current_frame = 0;
         }
 
+        self.last_frame.unwrap()
+    }
+
+    fn process_frame(&mut self, frame: &LINFrame)
+    {
         let sync_byte: u8 = 0x55;
         let protected_identifier = (||
         {
@@ -162,9 +224,34 @@ impl LINMaster
             byte
         })();
 
-        let buf: Vec<u8> = vec![];
+        let mut buf: Vec<u8> = vec![0; self.options.break_bytes as usize];
+
+        buf.push(sync_byte);
+        buf.push(protected_identifier);
+
+
+        if !frame.request_frame
+        {
+            let data = frame.handler.response_data();
+            let mut sum = protected_identifier;
+
+            for b in data
+            {
+                buf.push(b);
+                sum = (sum + b) % 0xff;
+            }
+
+            sum = !sum & 0xff;
+
+            buf.push(sum);
+        }
 
         println!("VEC: {:?}", buf);
+    }
+
+    pub fn detect_frame_collision(&self, data: &Vec<u8>) -> bool
+    {
+        false
     }
 }
 

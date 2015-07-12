@@ -33,27 +33,12 @@ impl LINFrame
 
 pub trait LINFrameHandler
 {
+    // Used internally
+    fn boxed_new(&self) -> Box<LINFrameHandler>;
+
     // Array of up to 8 bytes
     fn response_data(&self) -> Vec<u8>;
 
     // Only called if request_fram == true
-    fn handle_response(&self, data: Vec<u8>);
+    fn handle_response(&self, data: &Vec<u8>);
 }
-
-// struct DefaultHandler
-// {
-//
-// }
-//
-// impl LINFrameHandler for DefaultHandler
-// {
-//     fn response_data(&self) -> Vec<u8>
-//     {
-//         vec![];
-//     }
-//
-//     fn handle_response(&self, data: Vec<u8>)
-//     {
-//
-//     }
-// }

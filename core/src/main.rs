@@ -3,11 +3,10 @@ use lin::LINOptions;
 use lin::LINMaster;
 use lin::frame;
 use lin::frame::LINFrame;
-use handlers::zero::Zero;
+use line::frame::handlers::zero::Zero;
 
 mod lin;
 mod rest;
-mod handlers;
 
 fn main()
 {

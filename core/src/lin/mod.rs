@@ -1,7 +1,6 @@
 extern crate serial;
 extern crate time;
 
-use std::env;
 use std::io;
 
 use self::time::Duration;
@@ -11,7 +10,8 @@ use self::serial::prelude::*;
 use self::frame::LINFrame;
 use std::sync::mpsc::channel;
 use std::thread;
-use std::sync::Arc;
+use std::collections::LinkedList;
+use std::rc::Rc;
 
 pub mod frame;
 
@@ -33,7 +33,7 @@ impl Default for LINOptions
         LINOptions
         {
             serial_port: "/dev/ttyAMA0".to_string(),
-            baud_rate: 600f32, //19200f32,
+            baud_rate: /*600f32,*/ 19200f32,
             break_bytes: 2f32,
             frame_padding_percent: 0.4f32,
             inter_frame_space: 10f32
@@ -41,7 +41,7 @@ impl Default for LINOptions
     }
 }
 
-pub struct LINMaster<'a>
+pub struct LINMaster
 {
     options: LINOptions,
     byte_time: f32,
@@ -49,20 +49,19 @@ pub struct LINMaster<'a>
     frame_bytes: f32,
     frame_time: f32,
     serial: Option<serial::posix::TTYPort>,
-    last_frame_data: Arc<Vec<u8>>,
 
     current_frame: usize,
-    current_collision_frame: usize,
-    last_frame: Option<&'a LINFrame>,
 
-    schedule: Vec<LINFrame>,
-    schedule_event_collision: Vec<LINFrame>,
-    schedule_sporadic: Vec<LINFrame>
+    schedule: Vec<Rc<LINFrame>>,
+    schedule_event_collision: Vec<Rc<LINFrame>>,
+    schedule_sporadic: Vec<Rc<LINFrame>>,
+
+    queue: LinkedList<Rc<LINFrame>>
 }
 
-impl<'a> Default for LINMaster<'a>
+impl Default for LINMaster
 {
-    fn default() -> LINMaster<'a>
+    fn default() -> LINMaster
     {
         LINMaster
         {
@@ -72,22 +71,21 @@ impl<'a> Default for LINMaster<'a>
             frame_bytes: 0f32,
             frame_time: 0f32,
             serial: None,
-            last_frame_data: Arc::new(vec![]),
 
             current_frame: 0,
-            current_collision_frame: 0,
-            last_frame: None,
 
             schedule: vec![],
             schedule_event_collision: vec![],
-            schedule_sporadic: vec![]
+            schedule_sporadic: vec![],
+
+            queue: LinkedList::new()
         }
     }
 }
 
-impl<'a> LINMaster<'a>
+impl LINMaster
 {
-    pub fn new(options: LINOptions) -> LINMaster<'a>
+    pub fn new(options: LINOptions) -> LINMaster
     {
         let mut master: LINMaster = Default::default();
 
@@ -105,7 +103,7 @@ impl<'a> LINMaster<'a>
 
     pub fn add_frame(&mut self, frame: LINFrame)
     {
-        self.schedule.push(frame);
+        self.schedule.push(Rc::new(frame));
     }
 
     pub fn start(&mut self)
@@ -141,66 +139,52 @@ impl<'a> LINMaster<'a>
 
     fn begin_frame(&mut self)
     {
-        if self.schedule.len() == 0
+        if self.queue.len() > 0
         {
-            return;
+            self.handle_received_data();
         }
 
-        let frame = self.last_frame;
-        let data = &self.last_frame_data;
-
-        self.last_frame_data = Arc::new(vec![]);
-
-        if !frame.is_none()
+        if self.queue.len() == 0
         {
-            let frame = frame.unwrap();
+            self.queue_next_frame();
+        }
 
-            if frame.request_frame
+        self.process_frame();
+    }
+
+    fn handle_received_data(&mut self)
+    {
+        let frame = self.queue.pop_front().unwrap();
+        let mut data = vec![];
+
+        self.serial.as_mut().unwrap().read(&mut data[..]);
+
+        if frame.request_frame
+        {
+            if match frame.frame_type { frame::Type::EventTriggered => true, _ => false }
             {
-                if match frame.frame_type { frame::Type::EventTriggered => true, _ => false }
+                if self.detect_frame_collision(&data)
                 {
-                    if self.detect_frame_collision(&data)
-                    {
-                        let collision_frame_ids = &frame.collision_frames;
-                        let mut collision_frames: Vec<LINFrame> = vec![];
+                    let collision_frames = &frame.collision_frames;
 
-                        for id in collision_frame_ids
-                        {
-                            collision_frames.push(LINFrame::new(*id, frame.frame_type, frame.request_frame, vec![], frame.handler.boxed_new()));
-                        }
-
-                        self.schedule_event_collision = collision_frames;
-                    }else
+                    for id in collision_frames
                     {
-                        frame.handler.handle_response(data);
+                        self.queue.push_back(Rc::new(LINFrame::new(*id, frame.frame_type, frame.request_frame, vec![], frame.handler.boxed_new())));
                     }
                 }else
                 {
-                    frame.handler.handle_response(data);
+                    frame.handler.handle_response(&data);
                 }
-            }
-        }
-
-        self.process_frame(self.next_frame());
-    }
-
-    fn next_frame(&mut self) -> &LINFrame
-    {
-        if self.schedule_event_collision.len() > 0
-        {
-            if self.current_collision_frame < self.schedule_event_collision.len()
-            {
-                self.last_frame = self.schedule_event_collision.get(self.current_collision_frame);
-                self.current_collision_frame += 1;
-                return self.last_frame.unwrap();
             }else
             {
-                self.schedule_event_collision = vec![];
-                self.current_collision_frame = 0;
+                frame.handler.handle_response(&data);
             }
         }
+    }
 
-        self.last_frame = self.schedule.get(self.current_frame);
+    fn queue_next_frame(&mut self)
+    {
+        let frame = self.schedule[self.current_frame].clone();
 
         self.current_frame += 1;
 
@@ -209,11 +193,13 @@ impl<'a> LINMaster<'a>
             self.current_frame = 0;
         }
 
-        self.last_frame.unwrap()
+        self.queue.push_back(frame);
     }
 
-    fn process_frame(&mut self, frame: &LINFrame)
+    fn process_frame(&mut self)
     {
+        let frame = self.queue.front().unwrap();
+
         let sync_byte: u8 = 0x55;
         let protected_identifier = (||
         {
@@ -246,7 +232,8 @@ impl<'a> LINMaster<'a>
             buf.push(sum);
         }
 
-        println!("VEC: {:?}", buf);
+        //println!("VEC: {:?}", buf);
+        self.serial.as_mut().unwrap().write(&buf[..]);
     }
 
     pub fn detect_frame_collision(&self, data: &Vec<u8>) -> bool

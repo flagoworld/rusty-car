@@ -24,6 +24,6 @@ impl LINFrameHandler for Zero
 
 	fn handle_response(&self, data: &Vec<u8>)
 	{
-		println!("HANDLE: {:?}", data);
+		//println!("HANDLE: {:?}", data);
 	}
 }

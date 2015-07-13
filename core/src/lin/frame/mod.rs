@@ -1,3 +1,4 @@
+#[derive(Copy, Clone)]
 pub enum Type
 {
     Unconditional,
@@ -27,7 +28,7 @@ impl LINFrame
 {
     pub fn new(id: u8, frame_type: Type, request_frame: bool, collision_frames: Vec<u8>, handler: Box<LINFrameHandler>) -> LINFrame
     {
-        LINFrame { id: id, frame_type: frame_type, request_frame: true, collision_frames: collision_frames, handler: handler }
+        LINFrame { id: id, frame_type: frame_type, request_frame: request_frame, collision_frames: collision_frames, handler: handler }
     }
 }
 

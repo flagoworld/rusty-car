@@ -1,9 +1,15 @@
+extern crate iron;
+extern crate router;
+
 use std::thread;
 use lin::LINOptions;
 use lin::LINMaster;
 use lin::frame;
 use lin::frame::LINFrame;
-use line::frame::handlers::zero::Zero;
+use lin::frame::handlers::zero::Zero;
+
+use iron::Iron;
+use router::Router;
 
 mod lin;
 mod rest;
@@ -12,6 +18,12 @@ fn main()
 {
     let rest_thread = thread::Builder::new().name("rusty-car-rest".to_string()).spawn(move ||
     {
+        let mut router = Router::new();
+
+        setup_router(&router);
+
+        Iron::new(router).http("localhost:3000").unwrap();
+
         loop
         {
             println!("REST");
@@ -39,4 +51,9 @@ fn main()
 fn load_frames(master: &mut LINMaster)
 {
     master.add_frame(LINFrame::new(0, frame::Type::Unconditional, true, vec![], Box::new(Zero::new())));
+}
+
+fn setup_router(router: &router::Router)
+{
+    router.get("/", rest.getRoot);
 }

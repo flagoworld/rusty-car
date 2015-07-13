@@ -9,3 +9,4 @@ authors = [ "Ryan Layne <ryan@cleanlinescollective.com>" ]
 serial = "0.2.0"
 time = "0.1.30"
 iron = "*"
+router = "*"

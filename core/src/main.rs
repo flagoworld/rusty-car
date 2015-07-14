@@ -1,5 +1,8 @@
 extern crate iron;
 extern crate router;
+extern crate rustc_serialize;
+extern crate serial;
+extern crate time;
 
 use std::thread;
 use lin::LINOptions;
@@ -20,7 +23,7 @@ fn main()
     {
         let mut router = Router::new();
 
-        setup_router(&router);
+        setup_router(&mut router);
 
         Iron::new(router).http("localhost:3000").unwrap();
 
@@ -53,7 +56,16 @@ fn load_frames(master: &mut LINMaster)
     master.add_frame(LINFrame::new(0, frame::Type::Unconditional, true, vec![], Box::new(Zero::new())));
 }
 
-fn setup_router(router: &router::Router)
+fn setup_router(router: &mut router::Router)
 {
-    router.get("/", rest.getRoot);
+    for (method, action, handler) in rest::get_handlers()
+    {
+        match method
+        {
+            rest::RestMethod::GET => router.get(action, handler),
+            rest::RestMethod::POST => router.post(action, handler),
+            rest::RestMethod::PUT => router.put(action, handler),
+            rest::RestMethod::DELETE => router.delete(action, handler)
+        };
+    }
 }

@@ -1,17 +1,15 @@
-extern crate serial;
-extern crate time;
-
 use std::io;
 
-use self::time::Duration;
+use time::Duration;
 
 use std::io::prelude::*;
-use self::serial::prelude::*;
+use serial::prelude::*;
 use self::frame::LINFrame;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::collections::LinkedList;
 use std::rc::Rc;
+use serial;
 
 pub mod frame;
 

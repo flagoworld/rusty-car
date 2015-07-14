@@ -1,4 +1,4 @@
-mod handlers
+pub mod handlers;
 
 #[derive(Copy, Clone)]
 pub enum Type

@@ -1,0 +1,42 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="css/jquery-ui.css" />
+        <link rel="stylesheet" href="css/style.css" />
+    </head>
+    <body>
+        <div id="container">
+            <div id="loading"><h1>INITIALIZING</h1></div>
+
+            <div id="dashboard">
+                <div id="dashboard-ecu">
+                    <canvas id="dashboard-ecu-speedo"></canvas>
+                    <canvas id="dashboard-ecu-rpm"></canvas>
+                    <pre id="dashboard-ecu-fuelair"></pre>
+                    <pre id="dashboard-ecu-oilpsi"></pre>
+                    <pre id="dashboard-ecu-coolanttemp"></pre>
+                    <pre id="dashboard-ecu-boostpsi"></pre>
+                    <pre id="dashboard-ecu-danger">WARNING: DANGER TO MANIFOLD!!!</pre>
+                </div>
+
+                <div id="dashboard-heater">
+                    <span id="dashboard-heater-thermostat-container"><input id="dashboard-heater-thermostat" type="text" value="60" disabled="disabled" /></span>
+                    <pre id="dashboard-heater-interiortemp"></pre>
+                    <pre id="dashboard-heater-exteriortemp"></pre>
+                </div>
+
+                <div id="dashboard-audio">
+                    <pre id="dashboard-audio-label">VOLUME</pre>
+                    <span id="dashboard-audio-volume-container"><input id="dashboard-audio-volume" type="text" value="45" disabled="disabled" /></span>
+                </div>
+            </div>
+
+            <ul id="tabs"><li class="sel"><a>DASHBOARD</a></li><li><a>AUDIO</a></li><li><a>CLIMATE</a></li><li><a>SENSORS</a></li></ul>
+        </div>
+    </body>
+
+    <script src="js/jquery.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/gauge.js"></script>
+    <script src="js/knob.js"></script>
+    <script src="js/script.js"></script>
+</html>

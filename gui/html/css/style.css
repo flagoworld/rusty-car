@@ -1,0 +1,214 @@
+body
+{
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    background-color: #000;
+
+    font-family: 'Led';
+    font-size: 24px;
+    color: #fff;
+}
+
+pre
+{
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    font-weight: normal;
+    font-family: 'Led';
+    font-size: 24px;
+}
+
+h1
+{
+    font-size: 30px;
+}
+
+#container
+{
+    width: 800px;
+    height: 480px;
+
+    background: url('../img/bg.png') no-repeat top left;
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+#loading
+{
+    width: 100%;
+    height: 100%;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    background-color: #000;
+
+    z-index: 1000;
+}
+
+#loading h1
+{
+    width: 100%;
+    height: 100px;
+    margin-top: -25px;
+
+    position: relative;
+    top: 50%;
+    left: 0;
+
+    text-align: center;
+
+    color: #fff;
+}
+
+
+/*<canvas id="dashboard-ecu-speedo"></canvas>
+<canvas id="dashboard-ecu-rpm"></canvas>
+<span id="dashboard-ecu-fuelair"></pre>
+<span id="dashboard-ecu-oilpsi"></pre>
+<span id="dashboard-ecu-coolanttemp"></pre>
+<span id="dashboard-ecu-boostpsi"></pre>
+<span id="dashboard-ecu-danger"></pre>
+<span id="dashboard-heater-interiortemp"></pre>
+<span id="dashboard-heater-exteriortemp"></pre>
+<span id="dashboard-audio-label"></pre>*/
+
+#dashboard-ecu-speedo
+{
+    position: absolute;
+    top: 10px;
+    left: 4px;
+}
+
+#dashboard-ecu-rpm
+{
+    position: absolute;
+    top: 25px;
+    left: 401px;
+}
+
+#dashboard-ecu-fuelair
+{
+    position: absolute;
+    top: 276px;
+    right: 222px;
+}
+
+#dashboard-ecu-oilpsi
+{
+    position: absolute;
+    top: 308px;
+    right: 222px;
+}
+
+#dashboard-ecu-coolanttemp
+{
+    position: absolute;
+    top: 340px;
+    right: 222px;
+}
+
+#dashboard-ecu-boostpsi
+{
+    position: absolute;
+    top: 372px;
+    right: 222px;
+}
+
+#dashboard-ecu-danger
+{
+    position: absolute;
+    top: 408px;
+    right: 200px;
+
+    color: #f00;
+    font-size: 18px;
+}
+
+#dashboard-heater-thermostat-container
+{
+    position: absolute;
+    top: 55px;
+    right: 0;
+}
+
+#dashboard-heater-interiortemp
+{
+    position: absolute;
+    top: 206px;
+    left: 620px;
+}
+
+#dashboard-heater-exteriortemp
+{
+    position: absolute;
+    top: 206px;
+    right: 5px;
+}
+
+#dashboard-audio-label
+{
+    position: absolute;
+    top: 263px;
+    left: 623px;
+}
+
+#dashboard-audio-volume-container
+{
+    position: absolute;
+    top: 280px;
+    right: 0;
+}
+
+#tabs
+{
+    width: 115%;
+    height: 40px;
+
+    margin: 0 0 0 -7%;
+    padding: 0;
+    border: 0;
+
+    list-style: none;
+
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+#tabs li
+{
+    height: 40px;
+    width: 25%;
+
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    color: #b7b7b7;
+
+    display: inline-block;
+
+    text-align: center;
+
+    overflow: hidden;
+}
+
+#tabs li a
+{
+    padding: 12px 10px;
+    display: inline-block;
+}
+
+#tabs li.sel a
+{
+    background-color: #fff;
+    color: #000;
+}

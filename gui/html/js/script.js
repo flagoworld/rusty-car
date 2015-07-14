@@ -220,7 +220,7 @@ function loadDashboardAudio()
 
 function loadDashboardLabels()
 {
-    $('#dashboard-ecu-fuelair').text('F/A: 1.34');
+    $('#dashboard-ecu-fuelair').text('A/F: 1.34');
     $('#dashboard-ecu-oilpsi').text('OIL PSI:   12');
     $('#dashboard-ecu-coolanttemp').text('CLNT TEMP:  110');
     $('#dashboard-ecu-boostpsi').text('BOOST PSI:    9');

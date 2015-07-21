@@ -37,8 +37,11 @@ function loadUI()
     loadDashboardAudio();
 
     loadDashboardLabels();
+
+    loadWebSocket();
 }
 
+var gauge_mph;
 function loadDashboardSpeedo()
 {
     var gauge = new Gauge(
@@ -91,8 +94,11 @@ function loadDashboardSpeedo()
     };
 
     gauge.draw();
+
+    gauge_mph = gauge;
 }
 
+var gauge_rpm;
 function loadDashboardRPM()
 {
     var gauge = new Gauge(
@@ -104,10 +110,10 @@ function loadDashboardRPM()
     	units       : 'RPMx1000',
     	title       : false,
     	minValue    : 0,
-    	maxValue    : 8,
+    	maxValue    : 8000,
         valueFormat:
         {
-            "int": 2,
+            "int": 4,
             dec: 0
         },
     	majorTicks  : ['0','1','2','3','4','5','6','7','8'],
@@ -145,6 +151,8 @@ function loadDashboardRPM()
     };
 
     gauge.draw();
+
+    gauge_rpm = gauge;
 }
 
 function knobDraw()
@@ -228,4 +236,30 @@ function loadDashboardLabels()
 
     $('#dashboard-heater-interiortemp').html('INT:70&deg;');
     $('#dashboard-heater-exteriortemp').html('64&deg;:EXT');
+}
+
+var socket;
+function loadWebSocket()
+{
+    socket = new WebSocket("ws://127.0.0.1:2794", "rust-websocket");
+    socket.onmessage = function(event)
+    {
+        var gauge = event.data.substring(0, 3);
+        var val = parseInt(event.data.substring(4), 10);
+
+    	if(gauge == 'mph')
+        {
+            gauge_mph.setValue(val);
+        }else
+        if(gauge == 'rpm')
+        {
+            gauge_rpm.setValue(val);
+        }
+    };
+
+    setInterval(function()
+    {
+        socket.send('mph');
+        socket.send('rpm');
+    }, 100);
 }
